@@ -21,16 +21,32 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
-import os
-import sys
-import atexit
 import sched
 import time
 from threading import Thread
 
+from py3nvml.py3nvml import nvmlDeviceGetPowerUsage,  \
+    nvmlDeviceGetCount,  \
+    nvmlDeviceGetHandleByIndex, \
+    nvmlInit, \
+    nvmlShutdown
+
+
+def try_get_info(f, h, default='N/A'):
+    try:
+        v = f(h)
+    except:
+        v = default
+    return v
+
 
 class Meter(object):
     def __init__(self, interval=20):
+        try:
+            nvmlInit()
+            self.gpu = True
+        except:
+            self.gpu = False
         self.interval = interval
         self.schedule = sched.scheduler(time.time, time.sleep)
         self.powers = []
@@ -47,12 +63,21 @@ class Meter(object):
 
     def _get_current_power(self, arrange_next=True):
         # return in kilo watt
-        if arrange_next:
-            self.schedule.enter(self.interval, 1, self._get_current_power)
+        if self.gpu:
+            num_gpus = nvmlDeviceGetCount()
+            current_power = 0
+            for i in range(num_gpus):
+                h = nvmlDeviceGetHandleByIndex(i)
+                power = try_get_info(nvmlDeviceGetPowerUsage, h, "-1")
+                current_power += power
+            if arrange_next:
+                self.schedule.enter(self.interval, 1, self._get_current_power)
+            else:
+                pass
         else:
-            pass
-        self.powers.append(0.25)
-        return 0.25
+            current_power = 0
+        self.powers.append(current_power)
+        return current_power
 
     def get_total_power(self):
         self.sum = sum(
@@ -60,11 +85,10 @@ class Meter(object):
         return self.sum
 
     def stop(self):
-        self.get_total_power()
-        print("Total Consumed: %0.2f Kwh" % self.sum)
-        return self.sum
-
-    def __del__(self):
+        if self.gpu:
+            nvmlShutdown()
+        else:
+            pass
         self.get_total_power()
         print("Total Consumed: %0.2f Kwh" % self.sum)
         return self.sum
