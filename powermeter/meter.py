@@ -26,6 +26,7 @@ import sys
 import atexit
 import sched
 import time
+from threading import Thread
 
 
 class Meter(object):
@@ -33,21 +34,37 @@ class Meter(object):
         self.interval = interval
         self.schedule = sched.scheduler(time.time, time.sleep)
         self.powers = []
-        self.schedule.enter(self.interval, 1, self.get_current_power)
-        self.schedule.run()
+        self.thread = Thread(target=self._get_power_period,
+                             name="powermeter_thread")
+        self.thread.setDaemon(True)
+        self.thread.start()
         self.sum = 0
 
-    def get_current_power(self):
+    def _get_power_period(self):
+        self._get_current_power(arrange_next=False)
+        self.schedule.enter(self.interval, 1, self._get_current_power)
+        self.schedule.run()
+
+    def _get_current_power(self, arrange_next=True):
         # return in kilo watt
+        if arrange_next:
+            self.schedule.enter(self.interval, 1, self._get_current_power)
+        else:
+            pass
         self.powers.append(0.25)
-        # arrange next run
-        self.schedule.enter(self.interval, 1, self.get_current_power)
+        return 0.25
 
     def get_total_power(self):
-        print(self.powers)
-        self.sum = sum(map(lambda x: float(x * self.interval/3600), self.powers))
-        print(self.sum)
+        self.sum = sum(
+            map(lambda x: float(x * self.interval/3600), self.powers))
+        return self.sum
+
+    def stop(self):
+        self.get_total_power()
+        print("Total Consumed: %0.2f Kwh" % self.sum)
+        return self.sum
 
     def __del__(self):
         self.get_total_power()
-        print("Total Consumed:" + str(self.sum))
+        print("Total Consumed: %0.2f Kwh" % self.sum)
+        return self.sum
