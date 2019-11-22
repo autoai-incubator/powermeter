@@ -1,4 +1,4 @@
-from powermeter import Meter
+from gpumeter import Meter
 import time
 
 if __name__ == "__main__":

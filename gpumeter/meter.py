@@ -90,6 +90,6 @@ class Meter(object):
         else:
             pass
         self.get_total_power()
-        print("Total Consumed: %0.2f Kwh" % self.sum)
-        print("Your Badge is Ready! See https://img.shields.io/badge/Power%20Consumption-{:.2f}%20Kwh-green".format(self.sum))
+        print("Total Consumed: %0.2f Wh" % self.sum)
+        print("Your Badge is Ready! See https://img.shields.io/badge/Power%20Consumption-{:.2f}%20Wh-green".format(self.sum))
         return self.sum
