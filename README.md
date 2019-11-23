@@ -1,5 +1,7 @@
 # GPU Meter
 
+[![](https://tinyurl.com/greenai-pledge)](https://github.com/daviddao/green-ai)
+
 Power Consumption Meter for NVIDIA GPUs.
 
 ## Installation
