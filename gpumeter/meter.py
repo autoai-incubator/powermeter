@@ -69,7 +69,7 @@ class Meter(object):
             for i in range(num_gpus):
                 h = nvmlDeviceGetHandleByIndex(i)
                 power = try_get_info(nvmlDeviceGetPowerUsage, h, "-1")
-                current_power += power
+                current_power += power/1000
             if arrange_next:
                 self.schedule.enter(self.interval, 1, self._get_current_power)
             else:
