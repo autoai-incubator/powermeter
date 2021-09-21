@@ -15,9 +15,9 @@ pip3 install gpumeter
 from gpumeter import Meter
 
 # Initialize with Interval (Seconds)
-m = Meter(20) # Get power status per 20 secons.
+m = Meter(20) # Get power status per 20 seconds.
 
-# Stop after you have run a time-consuming task.
+# Stop after the time-consuming task finished.
 m.stop()
 
 # It will output:
